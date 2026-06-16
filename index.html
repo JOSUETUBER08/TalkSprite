@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Talk Sprite</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="light">
+<main>
+    <div class="themeSwitcher">
+        <button onclick="setTheme('light')">☀️ Light</button>
+        <button onclick="setTheme('dark')">🌙 Dark</button>
+    </div>
+
+    <header class="siteHeader">
+        <h1>Talk Sprite</h1>
+        <p>Crie um personagem falando com imagens, áudio ou microfone.</p>
+    </header>
+
+    <nav class="wikiNav">
+        <a href="#editor">Editor</a>
+        <a href="#exportar">Exportar</a>
+        <a href="https://discord.gg/JFn5JCNt" target="_blank">Discord</a>
+        <a href="https://discord.gg/ABH5puyVm" target="_blank">JMST Studios</a>
+        <a href="https://www.roblox.com/games/139910404174592/Baldi-Shooters" target="_blank">Baldi Shooters</a>
+    </nav>
+
+    <div class="mainLayout">
+        <div class="editorArea" id="editor">
+
+            <section class="box">
+                <h2>🔊 Sons</h2>
+                <label><input type="checkbox" id="uiSounds" checked> Ativar sons do site</label>
+                <br><br>
+                <label><input type="checkbox" id="exportMusicEnabled" checked> Música durante exportação</label>
+                <br><br>
+                <label>Volume da música:</label>
+                <input type="range" id="exportMusicVolume" min="0" max="100" value="40">
+                <span id="volumeLabel">40%</span>
+                <br><br>
+            </section>
+
+            <section class="box">
+                <h2>Projeto</h2>
+                <button onclick="saveProject()">Salvar projeto .talksprite</button>
+                <label class="fileButton">
+                    Abrir projeto .talksprite
+                    <input type="file" accept=".talksprite,application/json" onchange="loadProject(event)">
+                </label>
+            </section>
+
+            <section class="box">
+                <h2>Pacote padrão</h2>
+                <select id="defaultPack" onchange="loadDefaultPack()">
+                    <option value="default1">Default 1</option>
+                    <option value="default2">Default 2</option>
+                </select>
+                <button onclick="loadDefaultPack()">Carregar pacote</button>
+            </section>
+
+            <section class="box">
+                <h2>Frames da boca</h2>
+                <p class="hint">Coloque suas imagens nos frames. A ordem define boca fechada até boca aberta. Também dá para arrastar os frames.</p>
+                <div id="framesArea"></div>
+                <button onclick="addFrame()">+ Adicionar frame</button>
+                <button onclick="resetDefaultFrames()">Usar frames padrão</button>
+            </section>
+
+            <section class="box">
+                <h2>Olhos / Piscar</h2>
+                <label><input type="checkbox" id="eyesEnabled"> Ativar olhos</label>
+                <br><br>
+                <label><input type="checkbox" id="blinkEnabled"> Ativar piscar automático</label>
+                <br><br>
+                <label>Olhos abertos:</label>
+                <input type="file" id="eyesOpenFile" accept="image/*">
+                <br><br>
+                <label>Olhos fechados:</label>
+                <input type="file" id="eyesClosedFile" accept="image/*">
+                <p class="hint">As imagens dos olhos devem ter o mesmo tamanho dos frames para encaixar certinho.</p>
+            </section>
+
+            <section class="box">
+                <h2>Áudio / Microfone</h2>
+                <input type="file" id="audioFile" accept="audio/*" onchange="loadCustomAudio(event)">
+                <br><br>
+                <select id="defaultAudio">
+                    <option value="audio/demo.wav">Demo WAV</option>
+                    <option value="audio/demo2.wav">Demo 2 WAV</option>
+                </select>
+                <button onclick="playDefaultAudio()">Testar áudio padrão</button>
+                <br><br>
+                <button onclick="startMicrophone()">🎙️ Ativar microfone</button>
+                <button onclick="stopMicrophone()">Desativar microfone</button>
+                <br><br>
+                <label><input type="checkbox" id="noiseReduction" checked> Redução de ruído</label>
+                <br>
+                <label>
+                    Nível da redução:
+                    <select id="noiseLevel">
+                        <option value="light">Fraca</option>
+                        <option value="medium" selected>Média</option>
+                        <option value="strong">Forte</option>
+                    </select>
+                </label>
+                <br>
+                <label><input type="checkbox" id="voiceMode" checked> Detectar mais voz e ignorar música</label>
+                <br><br>
+                <label>Sensibilidade da boca:</label>
+                <input type="range" id="sensitivity" min="30" max="140" value="75">
+                <div class="voiceMeter">
+                    <p>Volume detectado:</p>
+                    <div class="meter"><div id="voiceBar"></div></div>
+                </div>
+            </section>
+
+            <section class="box">
+                <h2>Preview</h2>
+                <div id="previewBox">
+                    <img id="character" class="layerImg" src="" alt="Preview do personagem">
+                    <img id="eyesLayer" class="eyeLayer" src="" alt="">
+                </div>
+                <br>
+                <button onclick="playPreview()">▶ Play Preview</button>
+                <button onclick="stopPreview()">■ Parar</button>
+            </section>
+
+            <section class="box" id="exportar">
+                <h2>Exportar</h2>
+                <input type="text" id="videoName" placeholder="Nome do vídeo" value="TalkSprite_Video">
+                <br><br>
+                <label>Formato:</label>
+                <select id="exportFormat">
+                    <option value="webm">WebM</option>
+                    <option value="mp4">MP4 (Beta - baixa WebM por enquanto)</option>
+                    <option value="gif">GIF</option>
+                </select>
+                <br><br>
+                <label>Duração:</label>
+                <select id="durationMode">
+                    <option value="audio" selected>Automático pelo áudio</option>
+                    <option value="custom">Tempo personalizado</option>
+                </select>
+                <br><br>
+                <label>Tempo personalizado em segundos:</label>
+                <input type="number" id="customDuration" min="1" max="600" value="10">
+                <br><br>
+                <label><input type="checkbox" id="loopAudio"> Repetir áudio no tempo personalizado</label>
+                <br><br>
+                <label>Qualidade:</label>
+                <select id="quality">
+                    <option value="16">16p - Batata</option>
+                    <option value="32">32p - Micro-ondas</option>
+                    <option value="64">64p - CCTV 1998</option>
+                    <option value="144">144p - Horrível</option>
+                    <option value="240">240p - Ruim</option>
+                    <option value="360">360p - Meme</option>
+                    <option value="480">480p - Normal</option>
+                    <option value="720">720p - HD</option>
+                    <option value="1080" selected>1080p - Full HD</option>
+                    <option value="1440">1440p - 2K</option>
+                    <option value="2160">2160p - 4K</option>
+                </select>
+                <br><br>
+                <label>Fundo personalizado:</label>
+                <input type="file" id="backgroundFile" accept="image/*" onchange="loadBackground(event)">
+                <br><br>
+                <label>Legenda:</label>
+                <input type="text" id="subtitleText" placeholder="Digite uma legenda">
+                <br><br>
+                <label><input type="checkbox" id="transparentBg"> Fundo transparente</label>
+                <br><br>
+                <button onclick="exportFrames()">Baixar frames ZIP</button>
+                <button onclick="exportVideo()">Baixar vídeo</button>
+                <button onclick="cancelExport()">Cancelar exportação</button>
+                <div class="progressBar"><div id="exportProgress"></div></div>
+                <p id="exportStatus"></p>
+            </section>
+        </div>
+
+        <aside class="sidebar">
+            <section class="box sideBox">
+                <h2>💬 Community</h2>
+                <a href="https://discord.gg/JFn5JCNt" target="_blank">Discord Server</a>
+                <br><br>
+                <a href="https://discord.gg/ABH5puyVm" target="_blank">JMST Studios</a>
+            </section>
+
+            <section class="box sideBox">
+                <h2>🎮 Games</h2>
+                <a href="https://www.roblox.com/games/139910404174592/Baldi-Shooters" target="_blank">Baldi Shooters</a>
+                <br><br>
+            </section>
+
+            <section class="box sideBox">
+                <h2>⭐ Recommended</h2>
+                <p class="sideText">Use imagens PNG com a mesma resolução para melhores resultados.</p>
+                <p class="sideText">Para microfone, use localhost ou site hospedado.</p>
+            </section>
+        </aside>
+    </div>
+
+    <footer class="wikiFooter">Talk Sprite © JMST Studios</footer>
+</main>
+
+<canvas id="canvas" style="display:none;"></canvas>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
